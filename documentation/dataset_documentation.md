@@ -1,246 +1,195 @@
 # Dataset Documentation
 
-## 1. Primary Dataset — IOVNB S Dataset
+## 1. Primary Dataset — Synchronized S and V Datasets
 
-The primary dataset used by our prototype is the **S Dataset** from the IOVNB dataset.
+The project uses synchronized **S (smartphone)** and **V (vehicle)** datasets for preparing the ML training data.
 
-It contains time-series sensor and navigation measurements collected during vehicle movement. The dataset provides information about the vehicle's position, motion, acceleration and orientation.
+The **S dataset** contains smartphone sensor and navigation measurements, including GPS information, accelerometer measurements, gravity, gyroscope measurements, phone orientation/yaw, and timing information.
 
-Our backend currently uses the **S Dataset** for developing the AI-ML based dead reckoning prototype.
+The **V dataset** contains vehicle-related measurements, including vehicle velocity and heading.
 
-### Dataset Overview
+For ML preparation, corresponding S and V journeys are matched and synchronized to create a derived dataset called **`Merged_S_V_Dataset`**.
 
-| Property | Details |
-|---|---|
-| Dataset | IOVNB Dataset |
-| Dataset used | **S Dataset** |
-| Data format | CSV |
-| Data type | Time-series sensor and navigation data |
-| Application | Vehicle navigation and movement |
-| Usage in our project | **Primary dataset for the prototype** |
+The current merged training dataset contains **72 matched journeys** and approximately **1,065,198 synchronized samples**.
 
-### Data Categories
+The S dataset provides the sensor measurements used as ML inputs, while the V dataset is currently used mainly to generate reliable training labels for East and North displacement.
 
-The S dataset contains several categories of sensor and navigation measurements.
+> **Note:** The V dataset is used for training-label generation and is not used as a runtime ML input.
 
-| Category | Measurements |
-|---|---|
-| GPS | Latitude, Longitude, Altitude |
-| GPS Movement | Speed, Orientation |
-| GPS Quality | Accuracy, Satellites in range |
-| Accelerometer | X, Y, Z |
-| Gyroscope | Yaw, Pitch, Roll |
-| Magnetic Field | X, Y, Z |
-| Gravity | X, Y, Z |
-| Orientation | Yaw, Pitch, Roll |
-| Time | Timestamp, Time since start |
+## 2. Data Categories
 
-### Feature Description
+The synchronized dataset contains measurements from two main sources:
 
-The S dataset contains 24 columns. These columns represent positional, motion, orientation, environmental, and time-related information.
+| Category | Source | Description |
+|---|---|---|
+| GPS Data | S | Latitude, longitude, speed, and heading measurements from the smartphone |
+| Accelerometer Data | S | Three-axis acceleration measurements |
+| Gravity Data | S | Three-axis gravity measurements used to obtain linear acceleration |
+| Gyroscope Data | S | Three-axis angular velocity measurements |
+| Phone Orientation | S | Phone orientation/yaw information |
+| Timing Data | S | Time information used to calculate the sampling interval (`dt_s`) |
+| Vehicle Velocity | V | Vehicle speed used to generate displacement labels |
+| Vehicle Heading | V | Vehicle heading used with velocity to generate displacement labels |
 
-| Feature | Description |
-|---|---|
-| GPS Latitude | Geographic latitude of the recorded position |
-| GPS Longitude | Geographic longitude of the recorded position |
-| GPS Altitude | Recorded altitude |
-| GPS Speed | Speed recorded by the GPS |
-| GPS Accuracy | Estimated accuracy of the GPS measurement |
-| GPS Orientation | Direction/orientation information from GPS |
-| GPS Satellites in Range | Number of satellites detected |
-| Time Since Start | Time elapsed since the beginning of the recording |
-| Date | Date and time of the measurement |
-| Accelerometer X | Acceleration along the X-axis |
-| Accelerometer Y | Acceleration along the Y-axis |
-| Accelerometer Z | Acceleration along the Z-axis |
-| Gravity X | Gravity component along the X-axis |
-| Gravity Y | Gravity component along the Y-axis |
-| Gravity Z | Gravity component along the Z-axis |
-| Gyroscope Yaw | Rotational measurement around the yaw axis |
-| Gyroscope Pitch | Rotational measurement around the pitch axis |
-| Gyroscope Roll | Rotational measurement around the roll axis |
-| Magnetic Field X | Magnetic-field measurement along the X-axis |
-| Magnetic Field Y | Magnetic-field measurement along the Y-axis |
-| Magnetic Field Z | Magnetic-field measurement along the Z-axis |
-| Orientation Yaw | Device orientation around the yaw axis |
-| Orientation Pitch | Device orientation around the pitch axis |
-| Orientation Roll | Device orientation around the roll axis |
+The S-side measurements provide the sensor information required for the ML features. The V-side velocity and heading measurements are used to generate the East and North displacement labels for supervised training.
+
+## 3. Feature Description
+
+The S dataset contains the sensor measurements from which the ML input features are derived. The first XGBoost baseline uses exactly eight input features:
+
+| Feature | Unit | Description |
+|---|---|---|
+| `linear_accel_x` | m/s² | Linear acceleration along the X-axis, obtained by subtracting gravity from the accelerometer measurement |
+| `linear_accel_y` | m/s² | Linear acceleration along the Y-axis, obtained by subtracting gravity from the accelerometer measurement |
+| `linear_accel_z` | m/s² | Linear acceleration along the Z-axis, obtained by subtracting gravity from the accelerometer measurement |
+| `gyro_x` | rad/s | Angular velocity around the X-axis |
+| `gyro_y` | rad/s | Angular velocity around the Y-axis |
+| `gyro_z` | rad/s | Angular velocity around the Z-axis |
+| `phone_heading_deg` | degrees | Phone heading/orientation used as an input feature |
+| `dt_s` | seconds | Time interval between consecutive synchronized samples |
+
+The ML model predicts two displacement values for each prediction interval:
+
+- `delta_x` — East displacement in metres
+- `delta_y` — North displacement in metres
+
+The `journey` and `time_s` fields are retained as metadata and are not used as ML input features.
 
 ## 4. Example Data Record
 
-Each row in the S dataset represents a set of measurements recorded at a particular point in time.
+A synchronized record contains sensor measurements from the S dataset along with the corresponding vehicle information from the V dataset.
 
-A simplified representation of a record is:
+A simplified example of the data structure is:
 
-| Data Type | Example Information |
-|---|---|
-| Position | Latitude, Longitude, Altitude |
-| Movement | GPS Speed |
-| Acceleration | Accelerometer X, Y, Z |
-| Rotation | Gyroscope Yaw, Pitch, Roll |
-| Magnetic Field | X, Y, Z |
-| Gravity | X, Y, Z |
-| Orientation | Yaw, Pitch, Roll |
-| Time | Timestamp / Time Since Start |
+| Field | Example | Description |
+|---|---:|---|
+| `time_s` | 12.50 | Time since the start of the journey |
+| `accel_x` | 0.42 | Accelerometer X-axis measurement |
+| `accel_y` | -0.13 | Accelerometer Y-axis measurement |
+| `accel_z` | 9.81 | Accelerometer Z-axis measurement |
+| `gravity_x` | 0.01 | Gravity X-axis component |
+| `gravity_y` | -0.02 | Gravity Y-axis component |
+| `gravity_z` | 9.79 | Gravity Z-axis component |
+| `gyro_x` | 0.012 | Gyroscope X-axis measurement |
+| `gyro_y` | -0.021 | Gyroscope Y-axis measurement |
+| `gyro_z` | 0.104 | Gyroscope Z-axis measurement |
+| `phone_heading_deg` | 87.4 | Phone heading in degrees |
+| `V_Velocity` | 36.0 | Vehicle velocity in km/h |
+| `V_Heading` | 90.0 | Vehicle heading in degrees |
 
-The dataset contains a large number of such time-series records collected during vehicle movement.
+The complete synchronized dataset contains additional GPS and metadata fields. The fields used for ML training are derived from the available sensor measurements during preprocessing.
 
 ## 5. Relevance to Dead Reckoning
 
-Dead reckoning estimates the current position of a moving system using information about its previous position and movement.
+Dead reckoning estimates the current position of a moving vehicle using motion and sensor information when reliable GPS positioning is unavailable.
 
-The S dataset provides several measurements that are relevant to this process, including:
+The dataset is relevant to the project because it provides synchronized smartphone sensor measurements along with vehicle velocity and heading information. The smartphone measurements provide the sensor features used by the ML model, while the vehicle measurements provide reference information for generating displacement labels.
 
-- Acceleration from the accelerometer
-- Rotational measurements from the gyroscope
-- Magnetic-field measurements
-- Orientation information
-- Speed and GPS information
-- Time-related information
+For each synchronized time interval, the vehicle velocity and heading are used to calculate the corresponding displacement in the East and North directions. These values form the target outputs for supervised ML training.
 
-These measurements describe how the vehicle moves and changes orientation over time. Processing this time-series information can therefore support movement and position estimation for the proposed AI-ML based dead reckoning system.
-
-The S dataset is used as the primary data source for the current prototype.
+The resulting training data allows the XGBoost regression models to learn the relationship between smartphone sensor measurements and vehicle displacement.
 
 ## 6. Dataset File Structure
 
-The source data consists of synchronized **S (smartphone)** and **V (vehicle)** datasets.
+The project uses synchronized S and V journey files for preparing the ML training data. Corresponding S and V journey files are matched and combined to create the derived `Merged_S_V_Dataset`.
 
-For the current ML pipeline, corresponding S and V journeys are matched and synchronized to create a derived dataset called **`Merged_S_V_Dataset`**.
+The dataset organization can be represented as:
 
-The corrected training data currently contains **72 matched journeys** and approximately **1,065,198 synchronized samples**.
+```text
+Synchronized S and V Datasets
+│
+├── S Dataset
+│   └── S-*.csv
+│
+├── V Dataset
+│   └── V-*.csv
+│
+└── Merged_S_V_Dataset
+    └── S + V synchronized journey files
+```
 
-### Dataset Components
+The original S files contain smartphone sensor and navigation measurements, while the V files contain vehicle measurements such as velocity and heading.
 
-| Component | Role |
-|---|---|
-| S Dataset | Provides smartphone sensor measurements used as ML inputs |
-| V Dataset | Provides vehicle velocity and heading information used to generate training labels |
-| Merged_S_V_Dataset | Contains synchronized S and V journey data used for ML training-data preparation |
+The `Merged_S_V_Dataset` contains the matched and synchronized S and V journeys used during ML training-data preparation.
 
-The classical C++ dead-reckoning baseline continues to read the original S sensor files, while the merged S+V data is primarily used to construct reliable ML training labels.
+The current merged dataset contains 72 matched journeys and approximately 1,065,198 synchronized samples.
 
 ## 7. Dataset Processing Flow
 
-The ML training pipeline uses synchronized smartphone (S) and vehicle (V) data. The S data provides the sensor measurements, while the V data is used to generate reliable displacement labels.
+The dataset is processed through the following steps before it is used for ML training:
 
-The current processing flow is:
+1. **Load S and V data**  
+   Smartphone sensor data from the S dataset and vehicle data from the V dataset are loaded.
 
-```text
-S Dataset + V Dataset
-          │
-          ▼
-Match Corresponding Journeys
-          │
-          ▼
-Synchronize S and V Samples
-          │
-          ▼
-Calculate Time Interval (dt)
-          │
-          ▼
-Calculate Linear Acceleration
-(Accelerometer − Gravity)
-          │
-          ▼
-Generate East/North Displacement Labels
-          │
-          ▼
-Prepare 8 ML Input Features
-          │
-          ▼
-XGBoost Regression
-          │
-          ▼
-Δx (East Displacement)
-+
-Δy (North Displacement)
-          │
-          ▼
-Update Local Position
-```
+2. **Match corresponding journeys**  
+   S and V journeys are matched to identify corresponding recordings.
 
-### Preprocessing
+3. **Synchronize the data**  
+   The matched S and V measurements are synchronized using their timestamps so that corresponding measurements refer to the same time interval.
 
-The current preprocessing pipeline includes:
+4. **Calculate the sampling interval**  
+   The time difference between consecutive synchronized samples is calculated as `dt_s`.
 
-- Matching corresponding S and V journeys.
-- Keeping synchronized samples.
-- Removing unmatched tail rows when the two files have different lengths.
-- Calculating the time interval (`dt_s`) from consecutive S timestamps.
-- Calculating linear acceleration by subtracting gravity from accelerometer measurements.
-- Converting vehicle velocity from km/h to m/s when generating labels.
-- Converting heading to radians when required for calculations.
-- Generating East and North displacement labels using vehicle velocity and heading.
-- Skipping invalid timing rows.
+5. **Prepare sensor features**  
+   Accelerometer and gravity measurements are used to obtain linear acceleration. Gyroscope measurements and phone heading are also prepared for ML use.
 
-No StandardScaler, MinMaxScaler, PCA, or other normalization is currently applied. The XGBoost model receives the physical-unit features directly.
+6. **Generate displacement labels**  
+   Vehicle velocity and heading from the V dataset are used to calculate East and North displacement values.
 
-The corrected training dataset currently contains no missing values.
+7. **Create the merged dataset**  
+   The synchronized information is combined to form the `Merged_S_V_Dataset`, which is used to prepare the ML training data.
 
 ## 8. ML Training Data Preparation
 
-For the ML training pipeline, the smartphone **S dataset** and vehicle **V dataset** are synchronized and merged to create the training data.
+After synchronization and preprocessing, the merged S + V data is prepared for supervised machine learning.
 
-The current training dataset contains:
+The S dataset provides the sensor-based input features, while the V dataset provides reference vehicle information used to generate the displacement labels.
 
-| Property | Details |
-|---|---|
-| Matched journeys | 72 |
-| Synchronized samples | Approximately 1,065,198 |
-| Mean time interval (`dt`) | Approximately 0.0999 seconds |
-| Missing values | None |
-| Effectively zero-displacement samples | Approximately 0.045% |
+The eight input features used for the initial XGBoost baseline are:
 
-The **S dataset** provides the smartphone sensor measurements used as inputs to the ML model.
+- `linear_accel_x`
+- `linear_accel_y`
+- `linear_accel_z`
+- `gyro_x`
+- `gyro_y`
+- `gyro_z`
+- `phone_heading_deg`
+- `dt_s`
 
-The **V dataset** provides vehicle velocity and heading information used to generate the displacement labels required for training.
+The target values are:
 
-> **Note:** V-dataset information is used to generate training labels and is not used as a runtime ML input.
+- `delta_x` — East displacement in metres
+- `delta_y` — North displacement in metres
 
-### ML Model Inputs
+The resulting training data therefore consists of the eight sensor-derived input features and the corresponding East/North displacement labels.
 
-The current XGBoost baseline uses eight input features:
+The current merged dataset contains approximately 1,065,198 synchronized samples from 72 matched journeys.
 
-| No. | Feature | Unit |
-|---|---|---|
-| 1 | Linear Acceleration X | m/s² |
-| 2 | Linear Acceleration Y | m/s² |
-| 3 | Linear Acceleration Z | m/s² |
-| 4 | Gyroscope X | rad/s |
-| 5 | Gyroscope Y | rad/s |
-| 6 | Gyroscope Z | rad/s |
-| 7 | Phone Heading | degrees |
-| 8 | Time Interval (`dt`) | seconds |
-
-The journey identifier and timestamp are retained as metadata and are not used as ML features.
+The exact train/test split and final training configuration will be finalized as the ML implementation is completed.
 
 ## 9. ML Model and Prediction
 
-### XGBoost Regression
+The initial ML approach uses **XGBoost regression** to estimate vehicle displacement from smartphone sensor measurements.
 
-The proposed ML baseline uses **XGBoost regression** to learn the relationship between smartphone sensor measurements and vehicle displacement.
+Two regression outputs are considered:
 
-Two separate XGBoost regression models are planned:
+- `delta_x` — predicted East displacement in metres
+- `delta_y` — predicted North displacement in metres
 
-| Model | Prediction |
-|---|---|
-| XGBoost Regressor 1 | `target_delta_x` — East displacement |
-| XGBoost Regressor 2 | `target_delta_y` — North displacement |
+The model uses the following eight input features:
 
-XGBoost was selected because it is suitable for structured sensor data, provides a lightweight nonlinear regression approach, trains relatively quickly, and requires limited preprocessing.
+1. `linear_accel_x`
+2. `linear_accel_y`
+3. `linear_accel_z`
+4. `gyro_x`
+5. `gyro_y`
+6. `gyro_z`
+7. `phone_heading_deg`
+8. `dt_s`
 
-### Model Output
+The trained models are intended to learn the relationship between smartphone sensor measurements and the corresponding vehicle displacement derived from the V dataset.
 
-For each prediction interval, the models estimate:
+The predicted displacement can then be used by the dead reckoning system to estimate movement when reliable GPS information is unavailable or degraded.
 
-| Output | Meaning | Unit |
-|---|---|---|
-| `delta_x` | East displacement | metres |
-| `delta_y` | North displacement | metres |
+The XGBoost model and its final training configuration are currently under development. Final model performance and evaluation results will be added after training and testing are completed.
 
-The predicted displacement is then used by the navigation component to update the local position:
-
-```text
-x_new = x_previous + delta_x
-y_new = y_previous + delta_y
