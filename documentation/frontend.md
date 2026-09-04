@@ -26,7 +26,7 @@ The frontend is developed using Flutter, providing a cross-platform mobile appli
 The splash screen introduces the NAVIAI application before entering the main application flow.
 
 ### 3.2 Onboarding and Setup
-[image]
+![Onboarding and Device Setup](images/onboarding.jpeg)
 
 ### 3.3 Home Screen
 [image]
