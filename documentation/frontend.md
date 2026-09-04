@@ -108,7 +108,7 @@ The main user flow of the NAVIAI application is:
 6. The user searches for and selects a destination.
 7. The application calculates and displays the route on the map.
 8. The navigation interface tracks the user's position.
-9. During GNSS signal loss, the navigation system can transition to its dead-reckoning mode.
+9. During GNSS signal loss, the navigation system is designed to transition to its dead-reckoning mode.
 10. When GNSS positioning becomes available again, the navigation system can return to the normal navigation state.
 
 ## 9. Current Implementation Status
