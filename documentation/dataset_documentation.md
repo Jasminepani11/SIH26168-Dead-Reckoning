@@ -91,53 +91,90 @@ The resulting training data allows the XGBoost regression models to learn the re
 
 ## 6. Dataset File Structure
 
-The project uses synchronized S and V journey files for preparing the ML training data. Corresponding S and V journey files are matched and combined to create the derived `Merged_S_V_Dataset`.
+The source data consists of synchronized S-series smartphone sensor recordings from the IOVNB dataset.
 
-The dataset organization can be represented as:
+For the AI preprocessing pipeline, only the Categorised S-series dataset tree is used. The Categorised and Uncategorised trees were identified as duplicate mirrors of the same underlying drives, so the Uncategorised mirror is excluded to prevent duplicate training data.
 
-```text
-Synchronized S and V Datasets
-│
-├── S Dataset
-│   └── S-*.csv
-│
-├── V Dataset
-│   └── V-*.csv
-│
-└── Merged_S_V_Dataset
-    └── S + V synchronized journey files
-```
+The original dataset contains 72 unique S-series recordings and 1,070,745 sensor rows.
 
-The original S files contain smartphone sensor and navigation measurements, while the V files contain vehicle measurements such as velocity and heading.
+During structural processing, exact duplicate rows were removed and recordings were segmented at gaps greater than 500 ms. This produced 83 continuous sequences.
 
-The `Merged_S_V_Dataset` contains the matched and synchronized S and V journeys used during ML training-data preparation.
+After timebase normalization and resampling to a uniform 10 Hz grid, the processed dataset contained 1,064,108 rows.
 
-The current merged dataset contains 72 matched journeys and approximately 1,065,198 synchronized samples.
+The final AI training dataset contains 611,979 examples generated from controlled simulated GNSS outages.
+
+### Dataset Components
+
+| Component | Role |
+| --- | --- |
+| S-series Dataset | Provides smartphone sensor and GNSS measurements used for preprocessing and AI training |
+| Continuous Sequences | Segmented recordings used to maintain valid continuous time intervals |
+| Resampled Dataset | Uniform 10 Hz sensor stream used for feature construction |
+| AI Training Dataset | Final HDF5 dataset containing training, validation and test examples |
+
+The final AI dataset is stored in HDF5 format with separate `/train`, `/validation`, and `/test` tables.
 
 ## 7. Dataset Processing Flow
 
-The dataset is processed through the following steps before it is used for ML training:
+The AI training pipeline processes the S-series sensor data through several controlled stages.
 
-1. **Load S and V data**  
-   Smartphone sensor data from the S dataset and vehicle data from the V dataset are loaded.
+The overall processing flow is:
 
-2. **Match corresponding journeys**  
-   S and V journeys are matched to identify corresponding recordings.
+    S-series Sensor Dataset
+              │
+              ▼
+    Source Selection & Deduplication
+              │
+              ▼
+    Structural Cleanup
+              │
+              ▼
+    Timebase Normalization
+              │
+              ▼
+    Uniform 10 Hz Resampling
+              │
+              ▼
+    GNSS Ground-Truth Reconstruction
+              │
+              ▼
+    Sensor Correction
+              │
+              ▼
+    Artificial GNSS Outage Generation
+              │
+              ▼
+    Feature & Target Construction
+              │
+              ▼
+    Leakage-Safe Train / Validation / Test Split
+              │
+              ▼
+    Final HDF5 AI Training Dataset
 
-3. **Synchronize the data**  
-   The matched S and V measurements are synchronized using their timestamps so that corresponding measurements refer to the same time interval.
+### Preprocessing
 
-4. **Calculate the sampling interval**  
-   The time difference between consecutive synchronized samples is calculated as `dt_s`.
+The preprocessing pipeline includes:
 
-5. **Prepare sensor features**  
-   Accelerometer and gravity measurements are used to obtain linear acceleration. Gyroscope measurements and phone heading are also prepared for ML use.
-
-6. **Generate displacement labels**  
-   Vehicle velocity and heading from the V dataset are used to calculate East and North displacement values.
-
-7. **Create the merged dataset**  
-   The synchronized information is combined to form the `Merged_S_V_Dataset`, which is used to prepare the ML training data.
+* Selecting the Categorised S-series dataset tree and excluding the duplicate Uncategorised mirror.
+* Removing exact duplicate rows.
+* Using the absolute DATE field as the canonical timestamp.
+* Repairing timestamp resets.
+* Splitting recordings at gaps greater than 500 ms.
+* Resampling the sensor data to a uniform 10 Hz grid.
+* Selecting the nearest real IMU snapshot without interpolating sensor measurements.
+* Applying an IMU validity gate to prevent distant source samples from being used.
+* Identifying valid GNSS fix events.
+* Filtering GNSS fixes using reported accuracy and physical-transition checks.
+* Interpolating only short GNSS intervals between accepted fixes.
+* Converting GNSS positions to a local East/North/Up representation.
+* Removing gravity from accelerometer measurements.
+* Correcting device-frame measurements into the East/North/Up world frame.
+* Applying causal sensor bias estimation where sufficient stable IMU evidence is available.
+* Applying causal low-pass filtering to reduce high-frequency sensor noise.
+* Generating controlled artificial GNSS outages for supervised AI training.
+* Constructing causal motion, dead-reckoning, heading and sensor-quality features.
+* Splitting the data by complete source recording to prevent leakage.
 
 ## 8. ML Training Data Preparation
 
