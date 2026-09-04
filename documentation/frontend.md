@@ -23,25 +23,25 @@ The frontend is developed using Flutter, providing a cross-platform mobile appli
 ## 3. Application Screens
 
 ### 3.1 Splash Screen
-The splash screen introduces the NAVIAI application before entering the main application flow.
+Displays the NAVIAI logo, app name, and tagline.
 
 ### 3.2 Onboarding and Setup
-![Onboarding and Device Setup](images/onboarding.jpeg)
+Displays location access, motion sensor status, and device readiness.
 
 ### 3.3 Home Screen
-[image]
+Displays the map, current location, destination selection, and route planning.
 
 ### 3.4 Destination Search
-[image]
+Displays starting location, destination search, recent destinations, and navigation controls.
 
 ### 3.5 Map and Navigation
-[image]
+Displays the route, current location, destination, distance, ETA, and navigation mode.
 
 ### 3.6 Trips
-[image]
+Displays previous trips with location, duration, distance, and step count.
 
 ### 3.7 Settings
-[image]
+Displays voice guidance, haptic feedback, sensor diagnostics, calibration, and app information.
 
 ## 4. Frontend Features
 
