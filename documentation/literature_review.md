@@ -16,7 +16,7 @@ A literature review was conducted to understand existing approaches for inertial
 
 The datasets identified during the literature survey are being studied to understand their sensor types, data formats, ground-truth information, and suitability for inertial navigation and dead reckoning.
 
-Detailed dataset information will be documented separately in the Dataset Documentation section.
+Detailed dataset information is documented separately in `dataset_documentation.md`.
 
  4. Key Observations
 
@@ -26,4 +26,4 @@ The literature review also shows that dataset characteristics such as sensor con
 
  5. Relevance to the Proposed System
 
-The reviewed literature provides a foundation for selecting appropriate sensor data, preprocessing techniques, machine-learning approaches, and evaluation methods for the proposed AI-ML based Intelligent Dead Reckoning System.
+The reviewed literature provides a foundation for selecting appropriate sensor data, preprocessing techniques, machine-learning approaches, and evaluation methods for the proposed Intelligent Dead Reckoning System.
