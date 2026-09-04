@@ -15,11 +15,13 @@ A literature review was conducted to understand existing approaches for inertial
  3. Dataset Comparison
 
 The datasets identified during the literature survey are being studied to understand their sensor types, data formats, ground-truth information, and suitability for inertial navigation and dead reckoning.
+
 Detailed dataset information will be documented separately in the Dataset Documentation section.
 
  4. Key Observations
 
 The reviewed studies demonstrate the use of inertial sensor measurements for continuous position estimation and the application of machine-learning techniques to improve inertial navigation performance.
+
 The literature review also shows that dataset characteristics such as sensor configuration, ground truth availability, recording conditions, and data format are important when developing and evaluating an intelligent dead reckoning system.
 
  5. Relevance to the Proposed System
