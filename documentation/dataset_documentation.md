@@ -214,3 +214,33 @@ The current XGBoost baseline uses eight input features:
 | 8 | Time Interval (`dt`) | seconds |
 
 The journey identifier and timestamp are retained as metadata and are not used as ML features.
+
+## 9. ML Model and Prediction
+
+### XGBoost Regression
+
+The proposed ML baseline uses **XGBoost regression** to learn the relationship between smartphone sensor measurements and vehicle displacement.
+
+Two separate XGBoost regression models are planned:
+
+| Model | Prediction |
+|---|---|
+| XGBoost Regressor 1 | `target_delta_x` — East displacement |
+| XGBoost Regressor 2 | `target_delta_y` — North displacement |
+
+XGBoost was selected because it is suitable for structured sensor data, provides a lightweight nonlinear regression approach, trains relatively quickly, and requires limited preprocessing.
+
+### Model Output
+
+For each prediction interval, the models estimate:
+
+| Output | Meaning | Unit |
+|---|---|---|
+| `delta_x` | East displacement | metres |
+| `delta_y` | North displacement | metres |
+
+The predicted displacement is then used by the navigation component to update the local position:
+
+```text
+x_new = x_previous + delta_x
+y_new = y_previous + delta_y
