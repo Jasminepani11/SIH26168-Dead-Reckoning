@@ -91,142 +91,105 @@ The resulting training data allows the XGBoost regression models to learn the re
 
 ## 6. Dataset File Structure
 
-The source data consists of synchronized S-series smartphone sensor recordings from the IOVNB dataset.
+The AI preprocessing pipeline uses the S-series smartphone sensor recordings from the IOVNB dataset.
 
-For the AI preprocessing pipeline, only the Categorised S-series dataset tree is used. The Categorised and Uncategorised trees were identified as duplicate mirrors of the same underlying drives, so the Uncategorised mirror is excluded to prevent duplicate training data.
+Only the Categorised S-series dataset tree is used for AI preprocessing. The Categorised and Uncategorised trees represent duplicate mirrors of the same underlying drives, so the Uncategorised mirror is excluded to prevent duplicate training data.
 
-The original dataset contains 72 unique S-series recordings and 1,070,745 sensor rows.
+The source dataset contains 72 unique S-series recordings with 1,070,745 original sensor rows.
 
-During structural processing, exact duplicate rows were removed and recordings were segmented at gaps greater than 500 ms. This produced 83 continuous sequences.
-
-After timebase normalization and resampling to a uniform 10 Hz grid, the processed dataset contained 1,064,108 rows.
-
-The final AI training dataset contains 611,979 examples generated from controlled simulated GNSS outages.
+After structural cleanup, timebase normalization, sensor correction, and AI-example construction, the final AI-ready dataset contains 611,979 examples.
 
 ### Dataset Components
 
 | Component | Role |
 | --- | --- |
-| S-series Dataset | Provides smartphone sensor and GNSS measurements used for preprocessing and AI training |
-| Continuous Sequences | Segmented recordings used to maintain valid continuous time intervals |
-| Resampled Dataset | Uniform 10 Hz sensor stream used for feature construction |
-| AI Training Dataset | Final HDF5 dataset containing training, validation and test examples |
+| S-series Dataset | Provides smartphone sensor and GNSS measurements |
+| Continuous Sequences | Valid continuous segments created during preprocessing |
+| AI Training Dataset | Final processed dataset used for AI model development |
 
-The final AI dataset is stored in HDF5 format with separate `/train`, `/validation`, and `/test` tables.
+The detailed transformations applied to the source data are documented in [`data_processing.md`](data_processing.md).
 
-## 7. Dataset Processing Flow
+## 7. Dataset Processing
 
-The AI training pipeline processes the S-series sensor data through several controlled stages.
+The raw S-series sensor data undergoes multiple processing stages before being used for AI model development.
 
-The overall processing flow is:
+The complete preprocessing pipeline is documented separately in [`data_processing.md`](data_processing.md).
 
-    S-series Sensor Dataset
-              │
-              ▼
-    Source Selection & Deduplication
-              │
-              ▼
-    Structural Cleanup
-              │
-              ▼
-    Timebase Normalization
-              │
-              ▼
-    Uniform 10 Hz Resampling
-              │
-              ▼
-    GNSS Ground-Truth Reconstruction
-              │
-              ▼
-    Sensor Correction
-              │
-              ▼
-    Artificial GNSS Outage Generation
-              │
-              ▼
-    Feature & Target Construction
-              │
-              ▼
-    Leakage-Safe Train / Validation / Test Split
-              │
-              ▼
-    Final HDF5 AI Training Dataset
+The major stages are:
 
-### Preprocessing
+* Data cleaning and structural validation
+* Timebase normalization and 10 Hz resampling
+* GNSS ground-truth reconstruction
+* Sensor correction
+* Simulated GNSS outage generation
+* Feature and target generation
+* Leakage-safe dataset splitting
 
-The preprocessing pipeline includes:
+The final processed dataset contains 38 approved input features and 6 supplied targets.
 
-* Selecting the Categorised S-series dataset tree and excluding the duplicate Uncategorised mirror.
-* Removing exact duplicate rows.
-* Using the absolute DATE field as the canonical timestamp.
-* Repairing timestamp resets.
-* Splitting recordings at gaps greater than 500 ms.
-* Resampling the sensor data to a uniform 10 Hz grid.
-* Selecting the nearest real IMU snapshot without interpolating sensor measurements.
-* Applying an IMU validity gate to prevent distant source samples from being used.
-* Identifying valid GNSS fix events.
-* Filtering GNSS fixes using reported accuracy and physical-transition checks.
-* Interpolating only short GNSS intervals between accepted fixes.
-* Converting GNSS positions to a local East/North/Up representation.
-* Removing gravity from accelerometer measurements.
-* Correcting device-frame measurements into the East/North/Up world frame.
-* Applying causal sensor bias estimation where sufficient stable IMU evidence is available.
-* Applying causal low-pass filtering to reduce high-frequency sensor noise.
-* Generating controlled artificial GNSS outages for supervised AI training.
-* Constructing causal motion, dead-reckoning, heading and sensor-quality features.
-* Splitting the data by complete source recording to prevent leakage.
+## 8. Final AI Training Dataset
 
-## 8. ML Training Data Preparation
+The final AI-ready dataset is generated from the processed S-series recordings.
 
-After synchronization and preprocessing, the merged S + V data is prepared for supervised machine learning.
+| Property | Value |
+| --- | --- |
+| Source recordings | 72 |
+| Continuous sequences | 83 |
+| Final AI examples | 611,979 |
+| Simulated GNSS outages | 2,629 |
+| Input features | 38 |
+| Targets | 6 |
+| Sampling rate | 10 Hz |
 
-The S dataset provides the sensor-based input features, while the V dataset provides reference vehicle information used to generate the displacement labels.
+The AI examples are generated using simulated GNSS outages of 5, 10, 20, 30, and 60 seconds.
 
-The eight input features used for the initial XGBoost baseline are:
+The dataset is divided into training, validation, and test sets at the source-drive level to prevent highly correlated samples from the same recording from appearing across different splits.
 
-- `linear_accel_x`
-- `linear_accel_y`
-- `linear_accel_z`
-- `gyro_x`
-- `gyro_y`
-- `gyro_z`
-- `phone_heading_deg`
-- `dt_s`
+## 9. AI Model Inputs and Targets
 
-The target values are:
+The final AI dataset contains 38 approved input features representing sensor motion, dead-reckoning state, heading, outage context, and sensor quality.
 
-- `delta_x` — East displacement in metres
-- `delta_y` — North displacement in metres
+The feature set includes:
 
-The resulting training data therefore consists of the eight sensor-derived input features and the corresponding East/North displacement labels.
+* World-frame acceleration
+* World-frame gyroscope measurements
+* Acceleration and gyroscope magnitudes
+* Jerk and yaw-rate information
+* Causal rolling statistics
+* Vehicle-relative acceleration
+* Dead-reckoning displacement and velocity
+* Heading representation
+* Integrated yaw
+* Distance and time since GNSS
+* Initial speed and course
+* Initial GNSS accuracy
+* Sensor bias confidence and calibration state
+* Magnetic-field plausibility
 
-The current merged dataset contains approximately 1,065,198 synchronized samples from 72 matched journeys.
+The complete approved feature list is maintained in `FEATURE_COLUMNS.json`.
 
-The exact train/test split and final training configuration will be finalized as the ML implementation is completed.
+### Supplied Targets
 
-## 9. ML Model and Prediction
+The final dataset provides six targets:
 
-The initial ML approach uses **XGBoost regression** to estimate vehicle displacement from smartphone sensor measurements.
+* `target_delta_east_m`
+* `target_delta_north_m`
+* `target_error_east_m`
+* `target_error_north_m`
+* `target_speed_mps`
+* `target_speed_error_mps`
 
-Two regression outputs are considered:
+The recommended correction targets for the supplied dead-reckoning baseline are:
 
-- `delta_x` — predicted East displacement in metres
-- `delta_y` — predicted North displacement in metres
+* `target_error_east_m`
+* `target_error_north_m`
 
-The model uses the following eight input features:
+The target columns are not used as model inputs.
 
-1. `linear_accel_x`
-2. `linear_accel_y`
-3. `linear_accel_z`
-4. `gyro_x`
-5. `gyro_y`
-6. `gyro_z`
-7. `phone_heading_deg`
-8. `dt_s`
+### Data Leakage Prevention
 
-The trained models are intended to learn the relationship between smartphone sensor measurements and the corresponding vehicle displacement derived from the V dataset.
+Only the approved features defined in `FEATURE_COLUMNS.json` may be used as model inputs.
 
-The predicted displacement can then be used by the dead reckoning system to estimate movement when reliable GPS information is unavailable or degraded.
+Normalization statistics are calculated from training data only and reused for validation, testing, and inference.
 
-The XGBoost model and its final training configuration are currently under development. Final model performance and evaluation results will be added after training and testing are completed.
-
+Training, validation, and test data are separated at the source-drive level, and each simulated GNSS outage belongs to only one split.
