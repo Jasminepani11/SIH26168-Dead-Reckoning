@@ -93,11 +93,9 @@ The resulting training data allows the XGBoost regression models to learn the re
 
 The AI preprocessing pipeline uses the S-series smartphone sensor recordings from the IOVNB dataset.
 
-Only the Categorised S-series dataset tree is used for AI preprocessing. The Categorised and Uncategorised trees represent duplicate mirrors of the same underlying drives, so the Uncategorised mirror is excluded to prevent duplicate training data.
-
 The source dataset contains 72 unique S-series recordings with 1,070,745 original sensor rows.
 
-After structural cleanup, timebase normalization, sensor correction, and AI-example construction, the final AI-ready dataset contains 611,979 examples.
+After structural cleanup, timebase normalization, GNSS ground-truth processing, sensor correction, and AI-example construction, the final AI-ready dataset contains 611,979 examples.
 
 ### Dataset Components
 
@@ -125,7 +123,7 @@ The major stages are:
 * Feature and target generation
 * Leakage-safe dataset splitting
 
-The final processed dataset contains 38 approved input features and 6 supplied targets.
+The final processed dataset contains 38 approved input features and 6 target variables.
 
 ## 8. Final AI Training Dataset
 
@@ -141,7 +139,7 @@ The final AI-ready dataset is generated from the processed S-series recordings.
 | Targets | 6 |
 | Sampling rate | 10 Hz |
 
-The AI examples are generated using simulated GNSS outages of 5, 10, 20, 30, and 60 seconds.
+The AI examples are generated using simulated GNSS outages of 5, 10, 20, 30, and 60 seconds, with complete ground truth available for each outage.
 
 The dataset is divided into training, validation, and test sets at the source-drive level to prevent highly correlated samples from the same recording from appearing across different splits.
 
@@ -168,7 +166,7 @@ The feature set includes:
 
 The complete approved feature list is maintained in `FEATURE_COLUMNS.json`.
 
-### Supplied Targets
+### Targets
 
 The final dataset provides six targets:
 
@@ -190,6 +188,4 @@ The target columns are not used as model inputs.
 
 Only the approved features defined in `FEATURE_COLUMNS.json` may be used as model inputs.
 
-Normalization statistics are calculated from training data only and reused for validation, testing, and inference.
-
-Training, validation, and test data are separated at the source-drive level, and each simulated GNSS outage belongs to only one split.
+Normalization statistics are calculated from training data only and reused for validation, testing, and inference.are separated at the source-drive level, and each simulated GNSS outage belongs to only one split.
