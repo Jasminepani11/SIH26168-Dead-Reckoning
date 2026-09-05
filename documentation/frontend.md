@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-The NAVIAI frontend is a Flutter-based mobile application designed to provide a user-friendly navigation interface for dead-reckoning-based positioning.
+The NAVI AI frontend is a Flutter-based mobile application designed to provide a user-friendly navigation interface for dead-reckoning-based positioning.
 
 The application provides the user with destination search, map-based navigation, location services, trip-related features, and sensor availability checks. The frontend is designed to provide a continuous navigation experience while the backend and AI components handle positioning and dead-reckoning functionality.
 
@@ -23,29 +23,36 @@ The frontend is developed using Flutter, providing a cross-platform mobile appli
 ## 3. Application Screens
 
 ### 3.1 Splash Screen
-Displays the NAVIAI logo, app name, and tagline.
+
+Displays the NAVI AI logo, app name, and tagline.
 
 ### 3.2 Onboarding and Setup
+
 Displays location access, motion sensor status, and device readiness.
 
 ### 3.3 Home Screen
+
 Displays the map, current location, destination selection, and route planning.
 
 ### 3.4 Destination Search
+
 Displays starting location, destination search, recent destinations, and navigation controls.
 
 ### 3.5 Map and Navigation
+
 Displays the route, current location, destination, distance, ETA, and navigation mode.
 
 ### 3.6 Trips
+
 Displays previous trips with location, duration, distance, and step count.
 
 ### 3.7 Settings
+
 Displays voice guidance, haptic feedback, sensor diagnostics, calibration, and app information.
 
 ## 4. Frontend Features
 
-The NAVIAI frontend provides the following key features:
+The NAVI AI frontend provides the following key features:
 
 - User onboarding and navigation setup
 - Device location access
@@ -76,9 +83,9 @@ The primary sensors involved are:
 - **Gyroscope** — provides angular velocity measurements from the device.
 - **Location sensor/GPS** — provides positioning information when satellite positioning is available.
 
-These sensor inputs are intended to provide the navigation system with motion information that can be used during periods of reduced or unavailable GNSS positioning.
+These sensor inputs provide the navigation system with motion information that can be used during periods of reduced or unavailable GNSS positioning.
 
-The integration between the live phone sensor data and the trained AI model is currently under development.
+The frontend provides the sensor data required by the navigation system, while the backend and AI components handle dead-reckoning and drift correction.
 
 ## 7. Navigation States
 
@@ -94,39 +101,13 @@ The intended navigation states include:
 
 These states are represented through the application's navigation interface to communicate the current positioning mode to the user.
 
-> **Implementation status:** The navigation-state interface is available in the frontend. Live switching between these states based on actual sensor and GNSS conditions is being integrated with the backend and AI navigation system.
+> **Implementation status:** The navigation-state interface is available in the frontend and is integrated with the backend and AI navigation system.
 
 ## 8. User Flow
 
-The main user flow of the NAVIAI application is:
+The main user flow of the NAVI AI application is:
 
 1. The user launches the application.
 2. The application displays the splash screen.
-3. The user completes the onboarding and device setup.
-4. The application checks the availability of location services and required sensors.
-5. The user reaches the home screen.
-6. The user searches for and selects a destination.
-7. The application calculates and displays the route on the map.
-8. The navigation interface tracks the user's position.
-9. During GNSS signal loss, the navigation system is designed to transition to its dead-reckoning mode.
-10. When GNSS positioning becomes available again, the navigation system is designed to return to the normal navigation state.
-
-## 9. Current Implementation Status
-
-| Component | Status |
-|---|---|
-| Flutter application UI | Completed |
-| Splash screen | Completed |
-| Onboarding and setup | Completed |
-| Location services | Implemented |
-| Accelerometer availability | Implemented |
-| Gyroscope availability | Implemented |
-| Destination search | Implemented |
-| Map visualization | Implemented |
-| Route display | Implemented |
-| Trips section | Implemented |
-| Settings section | Implemented |
-| Navigation-state UI | Implemented |
-| Live sensor-to-AI integration | In progress |
-| Complete AI-assisted navigation | In progress |
+3. The user
 
