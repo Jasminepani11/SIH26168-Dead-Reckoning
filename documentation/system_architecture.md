@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-BEACON is a hybrid GNSS and IMU navigation system designed to maintain positioning during temporary GNSS-denied conditions.
+NAVI AI is a hybrid GNSS and IMU navigation system designed to maintain positioning during temporary GNSS-denied conditions.
 
 ## 2. System Components
 
