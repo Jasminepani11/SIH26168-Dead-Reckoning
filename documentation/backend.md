@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-BEACON uses a C++ navigation engine together with the Flutter/Dart application layer.
+NAVI AI uses a C++ navigation engine together with the Flutter/Dart application layer.
 
 ## 2. Navigation Engine
 
