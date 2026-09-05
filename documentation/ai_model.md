@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-BEACON uses machine learning to reduce accumulated drift in smartphone-based dead reckoning during temporary GNSS outages.
+NAVI AI uses machine learning to reduce accumulated drift in smartphone-based dead reckoning during temporary GNSS outages.
 
 ## 2. AI Model
 
